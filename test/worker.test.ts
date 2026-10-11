@@ -14,6 +14,16 @@ function env(overrides: Record<string, unknown> = {}) {
 }
 
 describe('handleSchedule', () => {
+  it('accepts an http feed on localhost only', async () => {
+    const fetcher = (async () => new Response('BEGIN:VCALENDAR\nEND:VCALENDAR')) as unknown as typeof fetch;
+    for (const ok of ['http://localhost:3000/api/calendar/x.ics', 'http://localhost:3000', 'http://[::1]:3000/x.ics']) {
+      expect((await handleSchedule({ SCHEDULE_FEED_URL: ok }, fetcher)).status).toBe(200);
+    }
+    for (const bad of ['http://localhost.example/x.ics', 'http://localhost@evil.example/x.ics']) {
+      expect((await handleSchedule({ SCHEDULE_FEED_URL: bad }, fetcher)).status).toBe(500);
+    }
+  });
+
   it('proxies a valid calendar with no-store and text/calendar', async () => {
     const fetcher = vi.fn(async () => new Response(fixture, { headers: { 'content-type': 'text/calendar' } }));
     const res = await handleSchedule(env(), fetcher as unknown as typeof fetch);

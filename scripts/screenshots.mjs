@@ -5,7 +5,7 @@
 import { mkdir } from 'node:fs/promises';
 import { chromium } from 'playwright-core';
 
-const base = process.argv[2] ?? 'http://localhost:5173';
+const base = process.argv[2] ?? 'http://localhost:4310';
 const out = process.argv[3] ?? 'screenshots';
 const executablePath = process.env.CHROME_PATH;
 const FROZEN = new Date('2026-10-12T07:05:00Z'); // Monday 09:05 in Stockholm

@@ -103,6 +103,16 @@ describe('parseSchedule – fixture', () => {
     expect(idh.description.split('\n')[0]).toBe('Lärare: Mikael Ek');
   });
 
+  it('classifies hand-ins and tests, strips the prefix and reads the course', () => {
+    const handin = schedule.lessons.find((l) => l.kind === 'handin')!;
+    expect(handin).toMatchObject({ title: 'Slöjdlogg åk 8', course: 'Slöjd', subject: 'slöjd', allDay: true, dayKey: '2026-10-14' });
+    expect(handin.description).toBe('Från skolan, via Plugga.');
+    const exam = schedule.lessons.find((l) => l.kind === 'test')!;
+    expect(exam).toMatchObject({ title: 'Historia – Första världskriget', course: '', allDay: true, dayKey: '2026-10-16' });
+    const ma = schedule.lessons.find((l) => l.title === 'Matematik')!;
+    expect(ma).toMatchObject({ kind: 'lesson', course: '' });
+  });
+
   it('is sorted by start time', () => {
     const times = schedule.lessons.map((l) => l.start.getTime());
     expect([...times].sort((a, b) => a - b)).toEqual(times);
@@ -190,6 +200,11 @@ describe('parseSchedule – edge cases', () => {
     const s = parseSchedule(ics, HT26);
     expect(s.lessons).toHaveLength(1);
     expect(formatTime(s.lessons[0].start)).toBe('10:10');
+  });
+
+  it('leaves timed events as lessons even with a "Prov:" prefix', () => {
+    const ics = wrap('BEGIN:VEVENT\r\nUID:p\r\nDTSTART:20261012T071000Z\r\nDTEND:20261012T081000Z\r\nSUMMARY:Prov: Historia\r\nEND:VEVENT\r\n');
+    expect(parseSchedule(ics, HT26).lessons[0]).toMatchObject({ kind: 'lesson', title: 'Prov: Historia' });
   });
 
   it('gives untitled events a placeholder title', () => {

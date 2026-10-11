@@ -32,7 +32,7 @@ be committed.
 ## Development
 
 ```sh
-npm run dev          # Vite on http://localhost:5173 with the fixture feed
+npm run dev          # Vite on http://localhost:4310 with the fixture feed
 npm run preview      # Build + wrangler dev on http://localhost:8787 (real proxy)
 ```
 
@@ -44,10 +44,14 @@ work on the UI without the Worker. Other states:
 VITE_FIXTURE=empty npm run dev   # the empty-calendar state (what the real feed returns today)
 VITE_FIXTURE=html  npm run dev   # a Cloudflare Access login page instead of ICS
 VITE_FIXTURE=error npm run dev   # a 502 from the proxy
+# Real feed instead of the fixture (e.g. a local Plugga on http://localhost:3000):
+# put DEV_FEED_URL=<feed url> in .env.local (gitignored), then `npm run dev`
 ```
 
 `npm run preview` runs `wrangler dev`, which serves `dist/` and proxies the
 real feed from `SCHEDULE_FEED_URL` in `.dev.vars`. Run `npm run build` first.
+`SCHEDULE_FEED_URL` must be `https://`; plain `http://` is accepted only for
+`localhost`.
 
 Keyboard on desktop: `←`/`→` previous/next, `t` today, `d` day view, `v` week
 view. On phones, swipe horizontally.
@@ -75,17 +79,33 @@ The Worker is configured in `wrangler.jsonc` for the custom domain
 `schema.martincrusell.com` (the zone must be on the same Cloudflare account;
 wrangler creates the DNS record on first deploy).
 
+First time, in this order, so the schedule is never reachable without Access:
+
+1. `npx wrangler login`
+2. In Zero Trust → Access → Applications, add a self-hosted application for
+   `schema.martincrusell.com` with an Allow policy for the people who may see
+   the schedule.
+3. `npm run deploy`. Without the secret the proxy answers 500, so no schedule
+   data is served yet.
+4. Check that `https://schema.martincrusell.com` redirects to the Access
+   login when opened in a private window.
+5. `npx wrangler secret bulk .dev.vars` (or `npx wrangler secret put
+   SCHEDULE_FEED_URL`) to give the Worker the feed URL.
+
+After that, shipping a fix is one command. It runs the tests, builds and
+deploys:
+
 ```sh
-npx wrangler login                                   # once
-npx wrangler secret put SCHEDULE_FEED_URL            # paste the feed URL
-npm run deploy                                       # build + wrangler deploy
+npm run deploy
 ```
+
+`workers_dev` and `preview_urls` are off in `wrangler.jsonc`: a
+`*.workers.dev` address would bypass Access.
 
 ### Cloudflare Zero Trust (Access)
 
-The app has no login of its own. Put a Cloudflare Access application in front
-of `schema.martincrusell.com` **before** the first deploy, otherwise the
-schedule is public.
+The app has no login of its own; Access on `schema.martincrusell.com` is the
+only thing keeping the schedule private.
 
 Notes:
 

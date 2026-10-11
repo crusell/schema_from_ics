@@ -8,9 +8,18 @@ import { z } from 'zod';
  */
 
 const EnvSchema = z.object({
-  SCHEDULE_FEED_URL: z.string().url().refine((u) => u.startsWith('https://'), {
-    message: 'SCHEDULE_FEED_URL must be an https:// URL',
-  }),
+  // https only, except a feed on this machine (local development).
+  SCHEDULE_FEED_URL: z
+    .string()
+    .url()
+    .refine(
+      (u) => {
+        if (!URL.canParse(u)) return false;
+        const { protocol, hostname } = new URL(u);
+        return protocol === 'https:' || (protocol === 'http:' && ['localhost', '127.0.0.1', '[::1]'].includes(hostname));
+      },
+      { message: 'SCHEDULE_FEED_URL must be an https:// URL (http:// only for localhost)' },
+    ),
 });
 
 export interface Env {

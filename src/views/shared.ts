@@ -1,5 +1,5 @@
 import { subjectHue } from '../lib/colors';
-import type { Lesson } from '../lib/ics';
+import type { Lesson, LessonKind } from '../lib/ics';
 import { formatDuration, formatTime } from '../lib/time';
 
 export function esc(s: string): string {
@@ -47,10 +47,14 @@ export function hueStyle(l: Lesson): string {
   return `--hue:${subjectHue(l.subject)}`;
 }
 
-/** Teacher line if the description follows the "Lärare: X" convention. */
-export function teacherOf(l: Lesson): string | null {
-  const m = l.description.match(/^(?:lärare|teacher)\s*:\s*(.+)$/im);
-  return m ? m[1].trim() : null;
+/** Label for all-day items; ordinary all-day events are just "Heldag". */
+export const KIND_LABEL: Record<LessonKind, string> = { lesson: 'Heldag', handin: 'Inlämning', test: 'Prov' };
+
+/** Small mark for hand-ins (tray with arrow) and tests (pencil). */
+export function kindIcon(kind: LessonKind): string {
+  if (kind === 'lesson') return '';
+  const path = kind === 'handin' ? 'M8 10V3M5 6l3-3 3 3M3 10v3h10v-3' : 'M3 13l1-3 7-7 2 2-7 7z';
+  return `<svg class="kindicon" viewBox="0 0 16 16" width="16" height="16" aria-hidden="true"><path d="${path}" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
 }
 
 /** Decorative mark for empty states: three faded "lesson" bars, like the app icon. */

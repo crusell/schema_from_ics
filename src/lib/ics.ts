@@ -9,12 +9,18 @@ import {
   wallClockToInstant,
 } from './time';
 
+export type LessonKind = 'lesson' | 'handin' | 'test';
+
 export interface Lesson {
   /** Stable per occurrence: `${uid}@${start ISO}` */
   id: string;
   uid: string;
+  /** Hand-ins and tests arrive as "Inlämning: …" / "Prov: …"; the prefix is stripped from the title. */
+  kind: LessonKind;
   title: string;
-  /** Normalised title used for colour hashing. */
+  /** Course from a "Kurs: …" description line, if any; that line is removed from `description`. */
+  course: string;
+  /** Normalised title (or course, for hand-ins and tests) used for colour hashing. */
   subject: string;
   location: string;
   description: string;
@@ -177,13 +183,20 @@ function pushResolved(
   window: ParseWindow,
   floatingTz: string,
 ): void {
-  const title = cleanText(comp.getFirstPropertyValue('summary')) || '(utan namn)';
+  const summary = cleanText(comp.getFirstPropertyValue('summary')) || '(utan namn)';
+  // Hand-ins and tests are all-day in the feed; timed events keep their full title.
+  const { kind, title } = startTime.isDate ? classify(summary) : { kind: 'lesson' as const, title: summary };
+  const rawDescription = cleanText(comp.getFirstPropertyValue('description'));
+  const course = rawDescription.match(COURSE_LINE)?.[1].trim() ?? '';
+  const description = rawDescription.replace(COURSE_LINE, '').trim();
   const base = {
     uid,
+    kind,
     title,
-    subject: normaliseSubject(title),
+    course,
+    subject: normaliseSubject(kind === 'lesson' ? title : course || title),
     location: cleanText(comp.getFirstPropertyValue('location')),
-    description: cleanText(comp.getFirstPropertyValue('description')),
+    description,
     cancelled: String(comp.getFirstPropertyValue('status') ?? '').toUpperCase() === 'CANCELLED',
   };
 
@@ -244,6 +257,14 @@ function toInstant(time: ICAL.Time, prop: ICAL.Property | null, floatingTz: stri
 function cleanText(value: unknown): string {
   if (value == null) return '';
   return String(value).replace(/\r\n|\r/g, '\n').trim();
+}
+
+const COURSE_LINE = /^kurs[ \t]*:[ \t]*(.*)\n?/im;
+
+function classify(summary: string): { kind: LessonKind; title: string } {
+  const m = summary.match(/^(inlämning|prov)\s*:\s*(.+)$/i);
+  if (!m) return { kind: 'lesson', title: summary };
+  return { kind: m[1].toLowerCase() === 'prov' ? 'test' : 'handin', title: m[2].trim() };
 }
 
 /** Lower-cased, whitespace-collapsed subject used for stable colours. */

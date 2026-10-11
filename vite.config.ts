@@ -1,20 +1,35 @@
 import { readFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
-import { defineConfig, type Plugin } from 'vite';
+import { defineConfig, loadEnv, type Plugin } from 'vite';
 import { VitePWA } from 'vite-plugin-pwa';
+import { handleSchedule } from './worker/index';
 
 /**
  * Dev-only: serve the test fixture at /api/schedule.ics so `vite` works
  * without the Worker. `wrangler dev` (npm run preview) uses the real proxy.
  * Set VITE_FIXTURE=empty to see the empty-calendar state.
+ * Set DEV_FEED_URL (in the gitignored .env.local) to proxy a real feed
+ * instead, e.g. a local Plugga instance on http://localhost:3000.
  */
-function fixtureFeed(): Plugin {
+function fixtureFeed(feedUrl?: string): Plugin {
   return {
     name: 'schema-fixture-feed',
     apply: 'serve',
     configureServer(server) {
       server.middlewares.use(async (req, res, next) => {
         if (!req.url?.startsWith('/api/schedule.ics')) return next();
+        if (feedUrl) {
+          // Same proxy code as production, so errors look the same in dev.
+          try {
+            const proxied = await handleSchedule({ SCHEDULE_FEED_URL: feedUrl });
+            res.statusCode = proxied.status;
+            proxied.headers.forEach((value, name) => res.setHeader(name, value));
+            res.end(await proxied.text());
+          } catch (err) {
+            next(err);
+          }
+          return;
+        }
         const mode = process.env.VITE_FIXTURE ?? 'full';
         if (mode === 'error') {
           res.statusCode = 502;
@@ -38,11 +53,13 @@ function fixtureFeed(): Plugin {
   };
 }
 
-export default defineConfig({
+export default defineConfig(({ mode }) => ({
   plugins: [
-    fixtureFeed(),
+    fixtureFeed(loadEnv(mode, process.cwd(), '').DEV_FEED_URL),
     VitePWA({
       registerType: 'autoUpdate',
+      // Behind Cloudflare Access the manifest request needs the session cookie.
+      useCredentials: true,
       includeAssets: ['icons/apple-touch-icon.png', 'icons/favicon.svg'],
       manifest: {
         id: '/',
@@ -77,6 +94,6 @@ export default defineConfig({
       devOptions: { enabled: false },
     }),
   ],
-  server: { port: 5173 },
+  server: { port: 4310, strictPort: true },
   build: { target: 'es2022', sourcemap: false },
-});
+}));

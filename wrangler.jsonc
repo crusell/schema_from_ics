@@ -10,6 +10,10 @@
     // Let the Worker see /api/* before the asset server does.
     "run_worker_first": ["/api/*"]
   },
+  // Only the custom domain is behind Cloudflare Access: never publish on
+  // *.workers.dev or preview URLs, which would bypass it.
+  "workers_dev": false,
+  "preview_urls": false,
   "routes": [
     { "pattern": "schema.martincrusell.com", "custom_domain": true }
   ],
