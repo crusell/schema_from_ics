@@ -46,10 +46,9 @@ is on branch `real-feed-shape` (PR open).
 ## Next steps
 
 1. Review and merge the `real-feed-shape` PR.
-2. Set up Cloudflare Access for `schema.martincrusell.com`, then
-   `npx wrangler login`, `npx wrangler secret put SCHEDULE_FEED_URL`,
-   `npm run deploy`. Verify Access blocks anonymous access, then test install
-   on iOS and Android.
+2. First deploy: follow the ordered steps in README → Deploy (login,
+   Access app, deploy, verify Access, then set the secret). Later fixes:
+   `npm run deploy`. Then test install on iOS and Android.
 3. Nice-to-haves: upcoming hand-ins/tests overview, remember last view.
 
 ## Open blockers / unverified

@@ -79,17 +79,33 @@ The Worker is configured in `wrangler.jsonc` for the custom domain
 `schema.martincrusell.com` (the zone must be on the same Cloudflare account;
 wrangler creates the DNS record on first deploy).
 
+First time, in this order, so the schedule is never reachable without Access:
+
+1. `npx wrangler login`
+2. In Zero Trust → Access → Applications, add a self-hosted application for
+   `schema.martincrusell.com` with an Allow policy for the people who may see
+   the schedule.
+3. `npm run deploy`. Without the secret the proxy answers 500, so no schedule
+   data is served yet.
+4. Check that `https://schema.martincrusell.com` redirects to the Access
+   login when opened in a private window.
+5. `npx wrangler secret bulk .dev.vars` (or `npx wrangler secret put
+   SCHEDULE_FEED_URL`) to give the Worker the feed URL.
+
+After that, shipping a fix is one command. It runs the tests, builds and
+deploys:
+
 ```sh
-npx wrangler login                                   # once
-npx wrangler secret put SCHEDULE_FEED_URL            # paste the feed URL
-npm run deploy                                       # build + wrangler deploy
+npm run deploy
 ```
+
+`workers_dev` and `preview_urls` are off in `wrangler.jsonc`: a
+`*.workers.dev` address would bypass Access.
 
 ### Cloudflare Zero Trust (Access)
 
-The app has no login of its own. Put a Cloudflare Access application in front
-of `schema.martincrusell.com` **before** the first deploy, otherwise the
-schedule is public.
+The app has no login of its own; Access on `schema.martincrusell.com` is the
+only thing keeping the schedule private.
 
 Notes:
 

@@ -58,6 +58,8 @@ export default defineConfig(({ mode }) => ({
     fixtureFeed(loadEnv(mode, process.cwd(), '').DEV_FEED_URL),
     VitePWA({
       registerType: 'autoUpdate',
+      // Behind Cloudflare Access the manifest request needs the session cookie.
+      useCredentials: true,
       includeAssets: ['icons/apple-touch-icon.png', 'icons/favicon.svg'],
       manifest: {
         id: '/',
