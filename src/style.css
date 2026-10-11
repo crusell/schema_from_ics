@@ -364,6 +364,7 @@ p {
 .wlesson,
 .nowcard,
 .allday__chip,
+.due,
 .wcol__chip,
 .sheet {
   --sub-bg: oklch(var(--sub-l) var(--sub-c) var(--hue));
@@ -442,6 +443,44 @@ p {
   color: var(--sub-ink);
   font-weight: 700;
   font-size: 14px;
+}
+.dues {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: 12px;
+}
+.due {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  min-height: 40px;
+  padding: 6px 12px;
+  border-radius: 10px;
+  background: var(--sub-bg);
+  color: var(--sub-ink);
+  box-shadow: inset 3px 0 0 var(--sub-bar);
+  text-align: left;
+  font-size: 14px;
+}
+.due__kind {
+  flex: none;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  opacity: 0.75;
+}
+.due__title {
+  min-width: 0;
+  font-weight: 700;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.kindicon {
+  flex: none;
 }
 .allday__dot {
   width: 10px;
@@ -532,9 +571,6 @@ p {
 }
 .lesson__room {
   font-weight: 600;
-}
-.lesson__teacher {
-  opacity: 0.8;
 }
 .lesson--short .lesson__body {
   padding: 3px 8px;
@@ -682,13 +718,24 @@ p {
 .wcol__events {
   background: repeating-linear-gradient(to bottom, var(--line) 0 1px, transparent 1px var(--h-px));
 }
+.week__allday {
+  display: grid;
+  grid-template-columns: var(--rail) repeat(var(--days), 1fr);
+  margin-bottom: 4px;
+}
 .wcol__allday {
   display: flex;
   flex-direction: column;
   gap: 3px;
   padding: 0 3px 4px;
+  min-width: 0;
 }
 .wcol__chip {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  min-width: 0;
+  text-align: left;
   font-size: 10px;
   font-weight: 700;
   padding: 3px 6px;
@@ -699,6 +746,38 @@ p {
   overflow: hidden;
   text-overflow: ellipsis;
   border-left: 3px solid var(--sub-bar);
+}
+.wcol__chiptext {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.wcol__chip .kindicon {
+  width: 12px;
+  height: 12px;
+}
+@media (max-width: 819px) {
+  /* Phone columns are too narrow for titles: hand-ins and tests become icon badges. */
+  .wcol__allday {
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+  .wcol__chip--due {
+    width: 26px;
+    height: 26px;
+    padding: 0;
+    justify-content: center;
+    border-left: 0;
+    border-radius: 8px;
+  }
+  .wcol__chip--due .wcol__chiptext {
+    display: none;
+  }
+  .wcol__chip--due .kindicon {
+    width: 15px;
+    height: 15px;
+  }
 }
 .wlesson {
   position: absolute;
@@ -749,6 +828,18 @@ p {
 }
 .wlesson--short .wlesson__title {
   -webkit-line-clamp: 1;
+}
+.wlesson.wlesson--tiny {
+  padding-top: 0;
+  padding-bottom: 0;
+  justify-content: center;
+}
+.wlesson--tiny .wlesson__title {
+  display: block;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  font-size: 10px;
+  line-height: 1.2;
 }
 .wlesson.lesson--past {
   opacity: 0.55;

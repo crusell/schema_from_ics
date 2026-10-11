@@ -13,7 +13,7 @@ import {
   weekdayName,
 } from './lib/time';
 import { renderDay } from './views/day';
-import { durationMinutes, emptyGlyph, esc, hueStyle, teacherOf, timeRange } from './views/shared';
+import { KIND_LABEL, durationMinutes, emptyGlyph, esc, hueStyle, timeRange } from './views/shared';
 import { renderWeek } from './views/week';
 
 type View = 'day' | 'week';
@@ -289,14 +289,13 @@ export function createApp(root: HTMLElement) {
   function renderSheet(): string {
     const l = state.selectedId ? state.schedule?.lessons.find((x) => x.id === state.selectedId) : undefined;
     if (!l) return '<dialog class="sheet" id="sheet"></dialog>';
-    const teacher = teacherOf(l);
     const desc = l.description
       .split('\n')
-      .filter((line) => line.trim() && !/^(lärare|teacher)\s*:/i.test(line))
+      .filter((line) => line.trim() && !/^kurs\s*:/i.test(line))
       .map((line) => `<p>${esc(line)}</p>`)
       .join('');
     const when = l.allDay
-      ? `${capitalize(weekdayName(l.dayKey))} ${formatDayMonth(l.dayKey)} · heldag`
+      ? `${KIND_LABEL[l.kind] || 'Heldag'} · ${weekdayName(l.dayKey)} ${formatDayMonth(l.dayKey)}`
       : `${capitalize(weekdayName(l.dayKey))} ${formatDayMonth(l.dayKey)} · ${timeRange(l)} · ${durationMinutes(l)} min`;
     return `<dialog class="sheet" id="sheet" style="${hueStyle(l)}" aria-labelledby="sheet-title">
       <div class="sheet__grab" aria-hidden="true"></div>
@@ -304,10 +303,10 @@ export function createApp(root: HTMLElement) {
       <h2 id="sheet-title" class="sheet__title">${esc(l.title)}${l.cancelled ? ' <span class="tag tag--cancelled">Inställd</span>' : ''}</h2>
       <p class="sheet__when">${esc(when)}</p>
       ${
-        l.location || teacher
+        l.location || l.course
           ? `<dl class="sheet__facts">
         ${l.location ? `<div><dt>Sal</dt><dd>${esc(l.location)}</dd></div>` : ''}
-        ${teacher ? `<div><dt>Lärare</dt><dd>${esc(teacher)}</dd></div>` : ''}
+        ${l.course ? `<div><dt>Kurs</dt><dd>${esc(l.course)}</dd></div>` : ''}
       </dl>`
           : ''
       }

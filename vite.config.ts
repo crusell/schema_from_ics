@@ -1,20 +1,36 @@
 import { readFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
-import { defineConfig, type Plugin } from 'vite';
+import { defineConfig, loadEnv, type Plugin } from 'vite';
 import { VitePWA } from 'vite-plugin-pwa';
 
 /**
  * Dev-only: serve the test fixture at /api/schedule.ics so `vite` works
  * without the Worker. `wrangler dev` (npm run preview) uses the real proxy.
  * Set VITE_FIXTURE=empty to see the empty-calendar state.
+ * Set DEV_FEED_URL (in the gitignored .env.local) to proxy a real feed
+ * instead, e.g. a local Plugga instance on http://localhost:3000.
  */
-function fixtureFeed(): Plugin {
+function fixtureFeed(feedUrl?: string): Plugin {
   return {
     name: 'schema-fixture-feed',
     apply: 'serve',
     configureServer(server) {
       server.middlewares.use(async (req, res, next) => {
         if (!req.url?.startsWith('/api/schedule.ics')) return next();
+        if (feedUrl) {
+          try {
+            const upstream = await fetch(feedUrl);
+            res.statusCode = upstream.ok ? 200 : 502;
+            res.setHeader('content-type', upstream.headers.get('content-type') ?? 'text/plain');
+            res.setHeader('cache-control', 'no-store');
+            res.end(await upstream.text());
+          } catch (err) {
+            res.statusCode = 502;
+            res.setHeader('content-type', 'application/json');
+            res.end(JSON.stringify({ error: (err as Error).message }));
+          }
+          return;
+        }
         const mode = process.env.VITE_FIXTURE ?? 'full';
         if (mode === 'error') {
           res.statusCode = 502;
@@ -38,9 +54,9 @@ function fixtureFeed(): Plugin {
   };
 }
 
-export default defineConfig({
+export default defineConfig(({ mode }) => ({
   plugins: [
-    fixtureFeed(),
+    fixtureFeed(loadEnv(mode, process.cwd(), '').DEV_FEED_URL),
     VitePWA({
       registerType: 'autoUpdate',
       includeAssets: ['icons/apple-touch-icon.png', 'icons/favicon.svg'],
@@ -77,6 +93,6 @@ export default defineConfig({
       devOptions: { enabled: false },
     }),
   ],
-  server: { port: 5173 },
+  server: { port: 4310, strictPort: true },
   build: { target: 'es2022', sourcemap: false },
-});
+}));

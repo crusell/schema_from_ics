@@ -10,60 +10,47 @@ Access is meant to sit in front.
 
 Stack: Vite 8, vanilla TypeScript, ical.js, zod (Worker env), vite-plugin-pwa,
 vitest, wrangler. See `CLAUDE.md` for architecture and `README.md` for
-setup/deploy.
+setup/deploy. Repo: `github.com/crusell/schema_from_ics` (public).
 
 ## Current state (2026-10-11)
 
-Feature-complete first version, **not deployed, not committed** (git repo is
-initialised, no commits).
+First version pushed to `main` (one commit). **Not deployed.** Work since then
+is on branch `real-feed-shape` (PR open).
 
-- Day view with timeline, now-line, "Nu"/"Nästa" tags, a "Pågår/Nästa" card
-  at the top of today, past lessons faded, overlapping lessons side by side,
-  all-day events as chips, details bottom sheet (`<dialog>`).
-- Week view (Mon–Fri, Sat/Sun only when scheduled), today column tinted,
-  tap a day header to open that day.
-- Mobile: fixed bottom bar (Dag/Vecka, ‹ Idag ›), swipe between days/weeks,
-  safe-area insets. Desktop: controls move into the header, week grid fills
-  width. Light/dark via system + manual toggle (◐ button).
-- Offline: raw ICS + timestamp in localStorage; header shows "Uppdaterat för
-  X sedan" / "Offline · …" / "Ladda om" (Access login page detected).
-- Empty-calendar state (what the real feed returns today), weekend/holiday
-  day states, empty week state, error states.
-- PWA: manifest (sv-SE, maskable icon), Workbox precache of the app shell,
-  Apple meta tags. Icons generated from `public/icons/favicon.svg`.
-- Worker proxy validated against the real feed with `wrangler dev`
-  (200, `text/calendar`, `no-store`; token not in bundle).
-- Tests: 48 passing (`npm test`), typecheck clean, production build OK.
-- Screenshots (gitignored) in `screenshots/` from `npm run screenshots`.
+- Day view: timeline, now-line, "Nu"/"Nästa" tags, "Pågår/Nästa" card,
+  overlapping lessons side by side, details bottom sheet.
+- Week view: Mon–Fri (Sat/Sun only when scheduled), all-day row above the
+  time grid.
+- Hand-ins and tests (`Inlämning: …`, `Prov: …`, all-day in the feed) are
+  their own kind: rows with icon in day view, icon badges (phone) or chips
+  (desktop) in week view, course shown in the sheet.
+- Offline cache in localStorage, PWA manifest + service worker, light/dark.
+- Tests: 49 passing, typecheck clean.
 
 ## What changed this session
 
-Everything: project created from an empty directory.
+- Project created from an empty directory and pushed.
+- Tried against a real feed from a local Plugga (`DEV_FEED_URL` in gitignored
+  `.env.local`, proxied by the Vite dev middleware). Real shape: lessons have
+  SUMMARY + LOCATION only, UTC times, no teacher; hand-ins/tests are all-day
+  with `Kurs: …` in DESCRIPTION.
+- Added `kind`/`course` to `Lesson`, removed teacher parsing.
+- Fixed week view: all-day chips used to push a column's time grid down so
+  lessons no longer lined up with the hour rail; 15-minute blocks were clipped.
+- Dev port moved 5173 → 4310 (strict).
 
 ## Next steps
 
-1. Set up Cloudflare Access for `schema.martincrusell.com`, then
+1. Review and merge the `real-feed-shape` PR.
+2. Set up Cloudflare Access for `schema.martincrusell.com`, then
    `npx wrangler login`, `npx wrangler secret put SCHEDULE_FEED_URL`,
-   `npm run deploy`. Verify the custom domain is created and Access blocks
-   anonymous access, then test install on iOS (Safari → Dela → Lägg till på
-   hemskärmen) and Android.
-2. When the school publishes real events, open the live feed and check the
-   actual event shape (SUMMARY format, LOCATION, DESCRIPTION conventions,
-   TZID vs UTC). Adjust `teacherOf()` in `src/views/shared.ts` and the
-   subject normalisation/colour map in `src/lib/colors.ts` if needed, and add
-   a fixture based on real data.
-3. Commit (first commit) once the user has reviewed.
-4. Nice-to-haves: "share this day" / add-to-calendar, haptic feedback on
-   swipe, remember last view (day/week) in localStorage.
+   `npm run deploy`. Verify Access blocks anonymous access, then test install
+   on iOS and Android.
+3. Nice-to-haves: upcoming hand-ins/tests overview, remember last view.
 
 ## Open blockers / unverified
 
 - Not deployed (deliberately: Zero Trust not in place yet). DNS untouched.
-- iOS/Android install flow, swipe gestures and the service worker have not
-  been tested on a real device; verified only in headless Chromium.
-- The real feed has zero VEVENTs today, so parsing of the real event shape is
-  untested; the fixture is a realistic guess.
-- The built-in browser pane could not render screenshots in this session
-  (pane hidden); screenshots were produced with Playwright's cached Chromium
-  via `scripts/screenshots.mjs` (`playwright-core` is a devDependency and
-  needs `CHROME_PATH` pointing at a Chromium binary).
+- Real-device install, swipe and service worker behind Access untested.
+- Phone day view: the now-line time label overlaps the hour label next to it.
+- Screenshots in `screenshots/` (gitignored) predate the hand-in changes.

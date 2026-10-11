@@ -7,10 +7,11 @@ import {
   esc,
   hueStyle,
   inLabel,
+  KIND_LABEL,
+  kindIcon,
   lessonStateAt,
   minutesUntil,
   nextLessonId,
-  teacherOf,
   timeRange,
 } from './shared';
 
@@ -28,9 +29,22 @@ export function renderDay({ dayKey, lessons, now, isToday }: DayViewInput): stri
 
   const parts: string[] = [];
   if (isToday) parts.push(renderNowCard(timed, now, nextId));
-  if (allDay.length) {
+  const dues = allDay.filter((l) => l.kind !== 'lesson');
+  const wholeDay = allDay.filter((l) => l.kind === 'lesson');
+  if (dues.length) {
     parts.push(
-      `<div class="allday">${allDay
+      `<div class="dues">${dues
+        .map(
+          (l) =>
+            `<button class="due" style="${hueStyle(l)}" data-action="open" data-id="${esc(l.id)}">
+              ${kindIcon(l.kind)}<span class="due__kind">${KIND_LABEL[l.kind]}</span><span class="due__title">${esc(l.title)}</span></button>`,
+        )
+        .join('')}</div>`,
+    );
+  }
+  if (wholeDay.length) {
+    parts.push(
+      `<div class="allday">${wholeDay
         .map(
           (l) =>
             `<button class="allday__chip" style="${hueStyle(l)}" data-action="open" data-id="${esc(l.id)}">
@@ -42,7 +56,7 @@ export function renderDay({ dayKey, lessons, now, isToday }: DayViewInput): stri
 
   if (timed.length === 0) {
     const weekend = weekdayIndex(dayKey) >= 5;
-    parts.push(renderEmptyDay(weekend ? 'weekend' : allDay.length ? 'allday' : 'free', allDay[0]?.title));
+    parts.push(renderEmptyDay(weekend ? 'weekend' : wholeDay.length ? 'allday' : 'free', wholeDay[0]?.title));
     return `<section class="day">${parts.join('')}</section>`;
   }
 
@@ -56,7 +70,6 @@ export function renderDay({ dayKey, lessons, now, isToday }: DayViewInput): stri
   const blocks = placed
     .map(({ lesson: l, startMin, endMin, col, cols }) => {
       const state = lessonStateAt(l, now, nextId, isToday);
-      const teacher = teacherOf(l);
       const dur = endMinutes(endMin, startMin);
       const short = dur < 35;
       return `<button class="lesson lesson--${state}${l.cancelled ? ' lesson--cancelled' : ''}${short ? ' lesson--short' : ''}"
@@ -73,7 +86,6 @@ export function renderDay({ dayKey, lessons, now, isToday }: DayViewInput): stri
           <span class="lesson__meta">
             <span class="lesson__time">${timeRange(l)}</span>
             ${l.location ? `<span class="lesson__room">${esc(l.location)}</span>` : ''}
-            ${teacher && !short ? `<span class="lesson__teacher">${esc(teacher)}</span>` : ''}
           </span>
         </span>
       </button>`;

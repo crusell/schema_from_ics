@@ -32,7 +32,7 @@ be committed.
 ## Development
 
 ```sh
-npm run dev          # Vite on http://localhost:5173 with the fixture feed
+npm run dev          # Vite on http://localhost:4310 with the fixture feed
 npm run preview      # Build + wrangler dev on http://localhost:8787 (real proxy)
 ```
 
@@ -44,6 +44,8 @@ work on the UI without the Worker. Other states:
 VITE_FIXTURE=empty npm run dev   # the empty-calendar state (what the real feed returns today)
 VITE_FIXTURE=html  npm run dev   # a Cloudflare Access login page instead of ICS
 VITE_FIXTURE=error npm run dev   # a 502 from the proxy
+# Real feed instead of the fixture (e.g. a local Plugga on http://localhost:3000):
+# put DEV_FEED_URL=<feed url> in .env.local (gitignored), then `npm run dev`
 ```
 
 `npm run preview` runs `wrangler dev`, which serves `dist/` and proxies the

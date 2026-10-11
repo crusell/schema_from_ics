@@ -7,7 +7,9 @@ function lesson(title: string, start: string, end: string, allDay = false): Less
   return {
     id: `${title}@${start}`,
     uid: title,
+    kind: 'lesson',
     title,
+    course: '',
     subject: title.toLowerCase(),
     location: '',
     description: '',

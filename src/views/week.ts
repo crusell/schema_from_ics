@@ -1,7 +1,7 @@
 import type { Lesson } from '../lib/ics';
 import { axisBounds, layoutDay, type Placed } from '../lib/layout';
 import { addDays, formatTime, keyToWallClock, minutesOfDay, pad, weekdayName } from '../lib/time';
-import { emptyGlyph, esc, hueStyle, lessonStateAt, nextLessonId, timeRange } from './shared';
+import { KIND_LABEL, emptyGlyph, esc, hueStyle, kindIcon, lessonStateAt, nextLessonId, timeRange } from './shared';
 
 export interface WeekViewInput {
   monday: string;
@@ -47,12 +47,11 @@ export function renderWeek({ monday, byDay, today, now }: WeekViewInput): string
       const isToday = key === today;
       const dayLessons = byDay.get(key) ?? [];
       const nextId = isToday ? nextLessonId(dayLessons, now) : null;
-      const allDay = dayLessons.filter((l) => l.allDay);
       const blocks = (placedByDay.get(key) ?? [])
         .map(({ lesson: l, startMin, endMin, col, cols }) => {
           const state = lessonStateAt(l, now, nextId, isToday);
           const dur = Math.max(15, endMin - startMin);
-          return `<button class="wlesson lesson--${state}${l.cancelled ? ' lesson--cancelled' : ''}${dur < 40 ? ' wlesson--short' : ''}${cols > 1 ? ' wlesson--narrow' : ''}"
+          return `<button class="wlesson lesson--${state}${l.cancelled ? ' lesson--cancelled' : ''}${dur < 40 ? ' wlesson--short' : ''}${dur < 25 ? ' wlesson--tiny' : ''}${cols > 1 ? ' wlesson--narrow' : ''}"
             style="${hueStyle(l)};--s:${startMin - axis.start * 60};--d:${dur};--col:${col};--cols:${cols}"
             data-action="open" data-id="${esc(l.id)}" aria-label="${esc(l.title)} ${timeRange(l)}" title="${esc(l.title)} ${timeRange(l)}${l.location ? ' · ' + esc(l.location) : ''}">
             <span class="wlesson__title">${esc(l.title)}</span>
@@ -62,20 +61,38 @@ export function renderWeek({ monday, byDay, today, now }: WeekViewInput): string
         .join('');
       const showNow = isToday && nowMin >= axis.start * 60 && nowMin <= axis.end * 60;
       const nowLine = showNow ? `<div class="nowline nowline--week" style="--s:${nowMin - axis.start * 60}" aria-hidden="true"></div>` : '';
-      const alldayHtml = allDay.length
-        ? `<div class="wcol__allday">${allDay.map((l) => `<span class="wcol__chip" style="${hueStyle(l)}" title="${esc(l.title)}">${esc(l.title)}</span>`).join('')}</div>`
-        : '';
-      return `<div class="wcol${isToday ? ' wcol--today' : ''}" data-day="${key}">${alldayHtml}<div class="wcol__events">${blocks}${nowLine}</div></div>`;
+      return `<div class="wcol${isToday ? ' wcol--today' : ''}" data-day="${key}"><div class="wcol__events">${blocks}${nowLine}</div></div>`;
     })
     .join('');
 
   return `<section class="week" style="--days:${days.length};--hours:${axis.end - axis.start}">
     ${renderHeaders(days, today)}
+    ${renderAllDay(days, byDay)}
     <div class="week__body">
       <div class="timeline__rail">${hours.join('')}</div>
       <div class="week__cols">${columns}</div>
     </div>
   </section>`;
+}
+
+/** All-day events, hand-ins and tests sit in their own row so the time grid stays aligned. */
+function renderAllDay(days: string[], byDay: Map<string, Lesson[]>): string {
+  const cells = days.map((key) => (byDay.get(key) ?? []).filter((l) => l.allDay));
+  if (cells.every((c) => c.length === 0)) return '';
+  return `<div class="week__allday" style="--days:${days.length}">
+    <div></div>
+    ${cells
+      .map(
+        (list) =>
+          `<div class="wcol__allday">${list
+            .map((l) => {
+              const label = `${KIND_LABEL[l.kind] ? KIND_LABEL[l.kind] + ': ' : ''}${esc(l.title)}`;
+              return `<button class="wcol__chip${l.kind !== 'lesson' ? ' wcol__chip--due' : ''}" style="${hueStyle(l)}" data-action="open" data-id="${esc(l.id)}" aria-label="${label}" title="${label}">${kindIcon(l.kind)}<span class="wcol__chiptext">${esc(l.title)}</span></button>`;
+            })
+            .join('')}</div>`,
+      )
+      .join('')}
+  </div>`;
 }
 
 function renderHeaders(days: string[], today: string): string {

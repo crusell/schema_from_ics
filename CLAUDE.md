@@ -6,7 +6,8 @@ current state and next steps.
 ## Commands
 
 ```sh
-npm run dev          # Vite + fixture feed on :5173 (VITE_FIXTURE=empty|html|error for other states)
+npm run dev          # Vite + fixture feed on :4310 (VITE_FIXTURE=empty|html|error for other states;
+                     # DEV_FEED_URL in gitignored .env.local proxies a real feed instead)
 npm run build        # tsc --noEmit + vite build → dist/ (incl. sw.js, manifest)
 npm run preview      # wrangler dev on :8787 serving dist/ + real proxy (needs .dev.vars, build first)
 npm test             # vitest run
@@ -34,6 +35,9 @@ npm run deploy       # build + wrangler deploy (do not run without Zero Trust in
   converted with `Intl` (`src/lib/time.ts`), falling back to ical.js
   VTIMEZONE and finally to `X-WR-TIMEZONE`/Europe/Stockholm for floating
   times. All-day events become one `Lesson` per covered day.
+  `Inlämning: …` / `Prov: …` summaries become `kind: 'handin' | 'test'` with
+  the prefix stripped; a `Kurs: …` description line becomes `course` (and
+  drives the colour). The feed carries no teacher.
 - **Time**: everything UI-facing goes through `src/lib/time.ts` with
   `Europe/Stockholm` hard-coded; `dayKey` ("YYYY-MM-DD") is the identity of a
   day. Never use `Date#getHours()` etc. in UI code.

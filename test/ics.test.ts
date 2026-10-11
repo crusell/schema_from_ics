@@ -103,6 +103,15 @@ describe('parseSchedule – fixture', () => {
     expect(idh.description.split('\n')[0]).toBe('Lärare: Mikael Ek');
   });
 
+  it('classifies hand-ins and tests, strips the prefix and reads the course', () => {
+    const handin = schedule.lessons.find((l) => l.kind === 'handin')!;
+    expect(handin).toMatchObject({ title: 'Slöjdlogg åk 8', course: 'Slöjd', subject: 'slöjd', allDay: true, dayKey: '2026-10-14' });
+    const exam = schedule.lessons.find((l) => l.kind === 'test')!;
+    expect(exam).toMatchObject({ title: 'Historia – Första världskriget', course: '', allDay: true, dayKey: '2026-10-16' });
+    const ma = schedule.lessons.find((l) => l.title === 'Matematik')!;
+    expect(ma).toMatchObject({ kind: 'lesson', course: '' });
+  });
+
   it('is sorted by start time', () => {
     const times = schedule.lessons.map((l) => l.start.getTime());
     expect([...times].sort((a, b) => a - b)).toEqual(times);
