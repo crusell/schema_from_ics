@@ -1,0 +1,3 @@
+# Copy to .dev.vars (gitignored). Used by `wrangler dev`.
+# The upstream ICS feed. Contains a secret token – never commit the real value.
+SCHEDULE_FEED_URL=https://example.invalid/api/calendar/REPLACE-ME.ics

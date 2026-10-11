@@ -1,0 +1,19 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "schema",
+  "main": "worker/index.ts",
+  "compatibility_date": "2026-10-01",
+  "assets": {
+    "directory": "./dist",
+    "binding": "ASSETS",
+    "not_found_handling": "single-page-application",
+    // Let the Worker see /api/* before the asset server does.
+    "run_worker_first": ["/api/*"]
+  },
+  "routes": [
+    { "pattern": "schema.martincrusell.com", "custom_domain": true }
+  ],
+  "observability": { "enabled": true }
+  // SCHEDULE_FEED_URL is a secret: `npx wrangler secret put SCHEDULE_FEED_URL`
+  // Locally it is read from .dev.vars (see .dev.vars.example).
+}
