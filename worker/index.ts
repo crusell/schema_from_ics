@@ -12,9 +12,14 @@ const EnvSchema = z.object({
   SCHEDULE_FEED_URL: z
     .string()
     .url()
-    .refine((u) => u.startsWith('https://') || /^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?\//.test(u), {
-      message: 'SCHEDULE_FEED_URL must be an https:// URL',
-    }),
+    .refine(
+      (u) => {
+        if (!URL.canParse(u)) return false;
+        const { protocol, hostname } = new URL(u);
+        return protocol === 'https:' || (protocol === 'http:' && ['localhost', '127.0.0.1', '[::1]'].includes(hostname));
+      },
+      { message: 'SCHEDULE_FEED_URL must be an https:// URL (http:// only for localhost)' },
+    ),
 });
 
 export interface Env {

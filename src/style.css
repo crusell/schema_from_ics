@@ -758,14 +758,8 @@ p {
 }
 @media (max-width: 819px) {
   /* Phone columns are too narrow for titles: hand-ins and tests become icon badges. */
-  .wcol__allday {
-    flex-direction: row;
-    flex-wrap: wrap;
-    justify-content: center;
-  }
   .wcol__chip--due {
-    width: 26px;
-    height: 26px;
+    min-height: 32px;
     padding: 0;
     justify-content: center;
     border-left: 0;

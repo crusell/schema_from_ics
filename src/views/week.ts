@@ -12,12 +12,10 @@ export interface WeekViewInput {
 }
 
 export function renderWeek({ monday, byDay, today, now }: WeekViewInput): string {
-  // Mon–Fri always; Sat/Sun only when something is scheduled.
-  const days: string[] = [];
-  for (let i = 0; i < 7; i++) {
-    const key = addDays(monday, i);
-    if (i < 5 || (byDay.get(key)?.length ?? 0) > 0) days.push(key);
-  }
+  // Mon–Fri always; the weekend only up to its last day with something scheduled.
+  const week = Array.from({ length: 7 }, (_, i) => addDays(monday, i));
+  const lastUsed = week.findLastIndex((key) => (byDay.get(key)?.length ?? 0) > 0);
+  const days = week.slice(0, Math.max(5, lastUsed + 1));
 
   const placedByDay = new Map<string, Placed[]>();
   const allPlaced: Placed[] = [];

@@ -20,10 +20,14 @@ function fixtureFeed(feedUrl?: string): Plugin {
         if (!req.url?.startsWith('/api/schedule.ics')) return next();
         if (feedUrl) {
           // Same proxy code as production, so errors look the same in dev.
-          const proxied = await handleSchedule({ SCHEDULE_FEED_URL: feedUrl });
-          res.statusCode = proxied.status;
-          proxied.headers.forEach((value, name) => res.setHeader(name, value));
-          res.end(await proxied.text());
+          try {
+            const proxied = await handleSchedule({ SCHEDULE_FEED_URL: feedUrl });
+            res.statusCode = proxied.status;
+            proxied.headers.forEach((value, name) => res.setHeader(name, value));
+            res.end(await proxied.text());
+          } catch (err) {
+            next(err);
+          }
           return;
         }
         const mode = process.env.VITE_FIXTURE ?? 'full';

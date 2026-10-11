@@ -3,7 +3,8 @@
  *
  * Common Swedish school subjects get hand-picked hues so the usual timetable
  * reads well (maths blue, Swedish yellow, English red, …). Anything else is
- * hashed (FNV-1a) onto a 12-step hue wheel so neighbouring hashes still look
+ * matched on a known subject word it contains ("Slöjd åk8" → slöjd, so a
+ * hand-in's course gets its subject's colour), and otherwise hashed (FNV-1a) onto a 12-step hue wheel so neighbouring hashes still look
  * clearly different. The CSS turns the hue into OKLCH colours so every subject
  * has the same perceived weight in both themes.
  */
@@ -51,6 +52,9 @@ const WHEEL_STEPS = 12;
 export function subjectHue(subject: string): number {
   const known = KNOWN[subject];
   if (known !== undefined) return known;
+  // Short codes (ma, sv, no, …) are too ambiguous to match inside other text.
+  const word = subject.split(/[^\p{L}]+/u).find((w) => w.length > 3 && KNOWN[w] !== undefined);
+  if (word) return KNOWN[word];
   let h = 0x811c9dc5;
   for (let i = 0; i < subject.length; i++) {
     h ^= subject.charCodeAt(i);

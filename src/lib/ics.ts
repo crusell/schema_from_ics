@@ -186,10 +186,9 @@ function pushResolved(
   const summary = cleanText(comp.getFirstPropertyValue('summary')) || '(utan namn)';
   // Hand-ins and tests are all-day in the feed; timed events keep their full title.
   const { kind, title } = startTime.isDate ? classify(summary) : { kind: 'lesson' as const, title: summary };
-  let course = '';
-  const description = cleanText(comp.getFirstPropertyValue('description'))
-    .replace(/^kurs[ \t]*:[ \t]*(.*)\n?/im, (_, c: string) => ((course = c.trim()), ''))
-    .trim();
+  const rawDescription = cleanText(comp.getFirstPropertyValue('description'));
+  const course = rawDescription.match(COURSE_LINE)?.[1].trim() ?? '';
+  const description = rawDescription.replace(COURSE_LINE, '').trim();
   const base = {
     uid,
     kind,
@@ -259,6 +258,8 @@ function cleanText(value: unknown): string {
   if (value == null) return '';
   return String(value).replace(/\r\n|\r/g, '\n').trim();
 }
+
+const COURSE_LINE = /^kurs[ \t]*:[ \t]*(.*)\n?/im;
 
 function classify(summary: string): { kind: LessonKind; title: string } {
   const m = summary.match(/^(inlämning|prov)\s*:\s*(.+)$/i);

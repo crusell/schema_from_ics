@@ -25,7 +25,7 @@ is on branch `real-feed-shape` (PR open).
   their own kind: rows with icon in day view, icon badges (phone) or chips
   (desktop) in week view, course shown in the sheet.
 - Offline cache in localStorage, PWA manifest + service worker, light/dark.
-- Tests: 49 passing, typecheck clean.
+- Tests: 57 passing (parser, layout, time, worker, views), typecheck clean.
 
 ## What changed this session
 
@@ -38,6 +38,10 @@ is on branch `real-feed-shape` (PR open).
 - Fixed week view: all-day chips used to push a column's time grid down so
   lessons no longer lined up with the hour rail; 15-minute blocks were clipped.
 - Dev port moved 5173 → 4310 (strict).
+- Ran /simplify and /code-review: Vite dev proxy now reuses the Worker's
+  `handleSchedule` (Worker accepts `http://` for localhost only); hand-in
+  colours follow the subject named in the course; weekend columns show up to
+  the last used day; view tests added.
 
 ## Next steps
 

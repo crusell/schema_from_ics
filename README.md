@@ -50,6 +50,8 @@ VITE_FIXTURE=error npm run dev   # a 502 from the proxy
 
 `npm run preview` runs `wrangler dev`, which serves `dist/` and proxies the
 real feed from `SCHEDULE_FEED_URL` in `.dev.vars`. Run `npm run build` first.
+`SCHEDULE_FEED_URL` must be `https://`; plain `http://` is accepted only for
+`localhost`.
 
 Keyboard on desktop: `←`/`→` previous/next, `t` today, `d` day view, `v` week
 view. On phones, swipe horizontally.
