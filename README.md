@@ -4,10 +4,22 @@ A small Swedish school-timetable PWA. It renders an iCalendar (ICS) feed as a
 day view and a week view, works offline, installs on iOS and Android, and runs
 as a single Cloudflare Worker (static assets + one tiny proxy route).
 
+![Week view on desktop](docs/week-desktop.png)
+
+<p>
+  <img src="docs/day-phone.png" alt="Day view on a phone, with the current and next lesson" width="250">
+  <img src="docs/day-phone-handin.png" alt="Day view with a hand-in due" width="250">
+  <img src="docs/week-phone-dark.png" alt="Week view on a phone, dark theme" width="250">
+</p>
+
+Screenshots show made-up fixture data (`test/fixtures/schema.ics`).
+
 - UI entirely in Swedish (sv-SE, Monday-first weeks, ISO week numbers, 24h).
 - All times shown in Europe/Stockholm regardless of device timezone.
 - Current-time line, "Nu"/"Nästa" lesson, overlapping lessons side by side.
 - Stable per-subject colours derived from the subject name.
+- Hand-ins (`Inlämning: …`) and tests (`Prov: …`) from the feed are shown as
+  their own rows and badges, coloured by the subject of their course.
 - Light and dark theme (follows the system, with a manual override).
 - Offline: the last successfully fetched schedule is shown with a
   "Uppdaterat …" indicator.
