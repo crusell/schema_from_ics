@@ -36,8 +36,9 @@ npm run deploy       # build + wrangler deploy (do not run without Zero Trust in
   VTIMEZONE and finally to `X-WR-TIMEZONE`/Europe/Stockholm for floating
   times. All-day events become one `Lesson` per covered day.
   `Inlämning: …` / `Prov: …` summaries become `kind: 'handin' | 'test'` with
-  the prefix stripped; a `Kurs: …` description line becomes `course` (and
-  drives the colour). The feed carries no teacher.
+  the prefix stripped; a `Kurs: …` description line is moved into `course` (and
+  drives the colour). Only all-day events are classified. The Vite dev
+  middleware reuses the Worker's `handleSchedule` for `DEV_FEED_URL`. The feed carries no teacher.
 - **Time**: everything UI-facing goes through `src/lib/time.ts` with
   `Europe/Stockholm` hard-coded; `dayKey` ("YYYY-MM-DD") is the identity of a
   day. Never use `Date#getHours()` etc. in UI code.
@@ -48,7 +49,7 @@ npm run deploy       # build + wrangler deploy (do not run without Zero Trust in
   (known Swedish subjects fixed, otherwise FNV-1a hash on a 12-step wheel).
   CSS derives OKLCH background/ink/bar colours per theme from `--hue`.
 - **Worker**: `worker/index.ts`. `/api/schedule.ics` → fetches
-  `env.SCHEDULE_FEED_URL` (validated with zod, https only), checks the body is
+  `env.SCHEDULE_FEED_URL` (validated with zod, https only except http://localhost), checks the body is
   a calendar, returns `text/calendar` with `no-store`. Everything else →
   static assets (`dist/`, SPA fallback). The upstream URL is a Worker secret;
   it must never be in the client bundle or any committed file.

@@ -291,11 +291,11 @@ export function createApp(root: HTMLElement) {
     if (!l) return '<dialog class="sheet" id="sheet"></dialog>';
     const desc = l.description
       .split('\n')
-      .filter((line) => line.trim() && !/^kurs\s*:/i.test(line))
+      .filter((line) => line.trim())
       .map((line) => `<p>${esc(line)}</p>`)
       .join('');
     const when = l.allDay
-      ? `${KIND_LABEL[l.kind] || 'Heldag'} · ${weekdayName(l.dayKey)} ${formatDayMonth(l.dayKey)}`
+      ? `${KIND_LABEL[l.kind]} · ${weekdayName(l.dayKey)} ${formatDayMonth(l.dayKey)}`
       : `${capitalize(weekdayName(l.dayKey))} ${formatDayMonth(l.dayKey)} · ${timeRange(l)} · ${durationMinutes(l)} min`;
     return `<dialog class="sheet" id="sheet" style="${hueStyle(l)}" aria-labelledby="sheet-title">
       <div class="sheet__grab" aria-hidden="true"></div>

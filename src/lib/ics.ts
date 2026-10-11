@@ -18,7 +18,7 @@ export interface Lesson {
   /** Hand-ins and tests arrive as "Inlämning: …" / "Prov: …"; the prefix is stripped from the title. */
   kind: LessonKind;
   title: string;
-  /** Course from a "Kurs: …" description line, if any. */
+  /** Course from a "Kurs: …" description line, if any; that line is removed from `description`. */
   course: string;
   /** Normalised title (or course, for hand-ins and tests) used for colour hashing. */
   subject: string;
@@ -183,9 +183,13 @@ function pushResolved(
   window: ParseWindow,
   floatingTz: string,
 ): void {
-  const { kind, title } = classify(cleanText(comp.getFirstPropertyValue('summary')) || '(utan namn)');
-  const description = cleanText(comp.getFirstPropertyValue('description'));
-  const course = description.match(/^kurs\s*:\s*(.+)$/im)?.[1].trim() ?? '';
+  const summary = cleanText(comp.getFirstPropertyValue('summary')) || '(utan namn)';
+  // Hand-ins and tests are all-day in the feed; timed events keep their full title.
+  const { kind, title } = startTime.isDate ? classify(summary) : { kind: 'lesson' as const, title: summary };
+  let course = '';
+  const description = cleanText(comp.getFirstPropertyValue('description'))
+    .replace(/^kurs[ \t]*:[ \t]*(.*)\n?/im, (_, c: string) => ((course = c.trim()), ''))
+    .trim();
   const base = {
     uid,
     kind,

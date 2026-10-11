@@ -2,6 +2,7 @@ import { readFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import { defineConfig, loadEnv, type Plugin } from 'vite';
 import { VitePWA } from 'vite-plugin-pwa';
+import { handleSchedule } from './worker/index';
 
 /**
  * Dev-only: serve the test fixture at /api/schedule.ics so `vite` works
@@ -18,17 +19,11 @@ function fixtureFeed(feedUrl?: string): Plugin {
       server.middlewares.use(async (req, res, next) => {
         if (!req.url?.startsWith('/api/schedule.ics')) return next();
         if (feedUrl) {
-          try {
-            const upstream = await fetch(feedUrl);
-            res.statusCode = upstream.ok ? 200 : 502;
-            res.setHeader('content-type', upstream.headers.get('content-type') ?? 'text/plain');
-            res.setHeader('cache-control', 'no-store');
-            res.end(await upstream.text());
-          } catch (err) {
-            res.statusCode = 502;
-            res.setHeader('content-type', 'application/json');
-            res.end(JSON.stringify({ error: (err as Error).message }));
-          }
+          // Same proxy code as production, so errors look the same in dev.
+          const proxied = await handleSchedule({ SCHEDULE_FEED_URL: feedUrl });
+          res.statusCode = proxied.status;
+          proxied.headers.forEach((value, name) => res.setHeader(name, value));
+          res.end(await proxied.text());
           return;
         }
         const mode = process.env.VITE_FIXTURE ?? 'full';

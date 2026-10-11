@@ -664,9 +664,12 @@ p {
 .week {
   --h-px: calc(60 * var(--wppm));
 }
-.week__head {
+.week__head,
+.week__allday {
   display: grid;
   grid-template-columns: var(--rail) repeat(var(--days), 1fr);
+}
+.week__head {
   margin-bottom: 8px;
 }
 .dayhead {
@@ -719,8 +722,6 @@ p {
   background: repeating-linear-gradient(to bottom, var(--line) 0 1px, transparent 1px var(--h-px));
 }
 .week__allday {
-  display: grid;
-  grid-template-columns: var(--rail) repeat(var(--days), 1fr);
   margin-bottom: 4px;
 }
 .wcol__allday {
@@ -744,7 +745,6 @@ p {
   color: var(--sub-ink);
   white-space: nowrap;
   overflow: hidden;
-  text-overflow: ellipsis;
   border-left: 3px solid var(--sub-bar);
 }
 .wcol__chiptext {

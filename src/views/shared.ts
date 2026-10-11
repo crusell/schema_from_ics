@@ -47,7 +47,8 @@ export function hueStyle(l: Lesson): string {
   return `--hue:${subjectHue(l.subject)}`;
 }
 
-export const KIND_LABEL: Record<LessonKind, string> = { lesson: '', handin: 'Inlämning', test: 'Prov' };
+/** Label for all-day items; ordinary all-day events are just "Heldag". */
+export const KIND_LABEL: Record<LessonKind, string> = { lesson: 'Heldag', handin: 'Inlämning', test: 'Prov' };
 
 /** Small mark for hand-ins (tray with arrow) and tests (pencil). */
 export function kindIcon(kind: LessonKind): string {

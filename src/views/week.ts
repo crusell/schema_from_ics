@@ -79,15 +79,16 @@ export function renderWeek({ monday, byDay, today, now }: WeekViewInput): string
 function renderAllDay(days: string[], byDay: Map<string, Lesson[]>): string {
   const cells = days.map((key) => (byDay.get(key) ?? []).filter((l) => l.allDay));
   if (cells.every((c) => c.length === 0)) return '';
-  return `<div class="week__allday" style="--days:${days.length}">
+  return `<div class="week__allday">
     <div></div>
     ${cells
       .map(
         (list) =>
           `<div class="wcol__allday">${list
             .map((l) => {
-              const label = `${KIND_LABEL[l.kind] ? KIND_LABEL[l.kind] + ': ' : ''}${esc(l.title)}`;
-              return `<button class="wcol__chip${l.kind !== 'lesson' ? ' wcol__chip--due' : ''}" style="${hueStyle(l)}" data-action="open" data-id="${esc(l.id)}" aria-label="${label}" title="${label}">${kindIcon(l.kind)}<span class="wcol__chiptext">${esc(l.title)}</span></button>`;
+              const due = l.kind !== 'lesson';
+              const label = `${due ? KIND_LABEL[l.kind] + ': ' : ''}${esc(l.title)}`;
+              return `<button class="wcol__chip${due ? ' wcol__chip--due' : ''}" style="${hueStyle(l)}" data-action="open" data-id="${esc(l.id)}" aria-label="${label}" title="${label}">${kindIcon(l.kind)}<span class="wcol__chiptext">${esc(l.title)}</span></button>`;
             })
             .join('')}</div>`,
       )
