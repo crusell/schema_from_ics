@@ -40,6 +40,12 @@ Plugga feed, which now has events.
 - An empty cached schedule plus a failing refresh now shows the error instead
   of "Schemat är tomt ännu".
 - Added `test/store.test.ts` (61 tests total).
+- Root cause of the empty phone: the service worker served the app page
+  from cache (navigateFallback), so page loads never reached Cloudflare
+  Access; with the phone's Access session expired, the data request and the
+  SW update check were both redirected to the login and failed. Navigations
+  are now network-first. A phone stuck on the old SW recovers by opening
+  `/api/schedule.ics` (not handled by the old SW) to log in, then the app.
 - Pull-to-refresh (touch events, indicator outside `#app`). Checked with
   synthetic touch events in desktop Chromium only.
 

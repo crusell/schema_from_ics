@@ -85,10 +85,25 @@ export default defineConfig(({ mode }) => ({
         // App shell is precached; the ICS feed is cached by the app itself
         // (localStorage with a timestamp) so it can show "last updated".
         globPatterns: ['**/*.{js,css,html,svg,png,webmanifest}'],
-        navigateFallback: '/index.html',
-        // Never let the SW answer API or Cloudflare Access routes from cache.
-        navigateFallbackDenylist: [/^\/api\//, /^\/cdn-cgi\//],
-        runtimeCaching: [],
+        // Page loads go to the network first, so an expired Cloudflare Access
+        // session can redirect to its login page (a cache-first app shell would
+        // hide the login and keep serving a stale app forever). Only when the
+        // network fails do we fall back to the last page or the precached shell.
+        // Redirects are never cached: only status 200.
+        navigateFallback: null,
+        runtimeCaching: [
+          {
+            urlPattern: ({ request, url }) =>
+              request.mode === 'navigate' && !url.pathname.startsWith('/api/') && !url.pathname.startsWith('/cdn-cgi/'),
+            handler: 'NetworkFirst',
+            options: {
+              cacheName: 'pages',
+              networkTimeoutSeconds: 5,
+              cacheableResponse: { statuses: [200] },
+              precacheFallback: { fallbackURL: '/index.html' },
+            },
+          },
+        ],
         cleanupOutdatedCaches: true,
       },
       devOptions: { enabled: false },

@@ -56,9 +56,11 @@ npm run deploy       # build + wrangler deploy (do not run without Zero Trust in
   a calendar, returns `text/calendar` with `no-store`. Everything else →
   static assets (`dist/`, SPA fallback). The upstream URL is a Worker secret;
   it must never be in the client bundle or any committed file.
-- **PWA**: vite-plugin-pwa `generateSW`, precache app shell only; `/api/*`
-  and `/cdn-cgi/*` are excluded from the navigation fallback so Cloudflare
-  Access redirects are never cached.
+- **PWA**: vite-plugin-pwa `generateSW`, precache app shell. Page loads
+  (navigations) are **network-first** so an expired Cloudflare Access session
+  can redirect to its login; only on network failure the last cached page or
+  the precached `/index.html` is used. Never make navigations cache-first:
+  that hid the Access login and froze phones on a stale app (2026-11).
 
 ## Patterns and rules
 
