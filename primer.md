@@ -40,6 +40,8 @@ Plugga feed, which now has events.
 - An empty cached schedule plus a failing refresh now shows the error instead
   of "Schemat är tomt ännu".
 - Added `test/store.test.ts` (61 tests total).
+- Pull-to-refresh (touch events, indicator outside `#app`). Checked with
+  synthetic touch events in desktop Chromium only.
 
 ## Next steps
 

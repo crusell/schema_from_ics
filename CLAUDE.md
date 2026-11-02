@@ -28,7 +28,9 @@ npm run deploy       # build + wrangler deploy (do not run without Zero Trust in
   an expired Cloudflare Access session → `not-ics` / "logga in igen"), and caches the raw text +
   timestamp in `localStorage` (`schema:cache:v1`). On failure the cached copy
   is used and the header shows offline / error status. Refresh on load, when
-  the tab becomes visible (if older than 5 min), every 30 min, and on `online`.
+  the tab becomes visible (if older than 5 min), every 30 min, on `online`,
+  and on pull-to-refresh (touch handlers in `app.ts`; after an expired Access
+  session it reloads the page so the login can show).
 - **Parsing**: `src/lib/ics.ts` uses ical.js. VEVENTs are grouped by UID,
   RECURRENCE-ID overrides are attached as `exceptions`, recurrences are
   expanded within a window (±90/200 days around the viewed day, re-expanded

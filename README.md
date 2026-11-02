@@ -21,6 +21,7 @@ Screenshots show made-up fixture data (`test/fixtures/schema.ics`).
 - Hand-ins (`Inlämning: …`) and tests (`Prov: …`) from the feed are shown as
   their own rows and badges, coloured by the subject of their course.
 - Light and dark theme (follows the system, with a manual override).
+- Pull down at the top of the page to refresh (also in the installed app).
 - Offline: the last successfully fetched schedule is shown with a
   "Uppdaterat …" indicator.
 

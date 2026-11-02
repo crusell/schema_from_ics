@@ -411,6 +411,63 @@ export function createApp(root: HTMLElement) {
   });
   root.addEventListener('pointercancel', () => (swipe = null));
 
+  // Pull to refresh: an installed PWA has no browser reload gesture. Touch
+  // events (not pointer events) because the browser cancels pointers once it
+  // starts scrolling. The indicator lives outside #app, which render() rebuilds.
+  const PULL_TRIGGER = 70;
+  const pull = document.createElement('div');
+  pull.className = 'pull';
+  pull.setAttribute('aria-hidden', 'true');
+  pull.innerHTML = '<span class="pull__icon">↓</span>';
+  document.body.append(pull);
+  let pullFrom: { x: number; y: number } | null = null;
+  let pullDist = 0;
+  function setPull(dist: number): void {
+    pullDist = dist;
+    pull.style.setProperty('--pull', `${dist}px`);
+    pull.style.opacity = String(Math.min(1, dist / 40));
+    pull.classList.toggle('is-ready', dist >= PULL_TRIGGER);
+  }
+  window.addEventListener(
+    'touchstart',
+    (e) => {
+      const atTop = window.scrollY <= 0 && e.touches.length === 1 && !state.selectedId;
+      pullFrom = atTop && !state.loading ? { x: e.touches[0].clientX, y: e.touches[0].clientY } : null;
+      pull.classList.add('is-dragging');
+    },
+    { passive: true },
+  );
+  window.addEventListener(
+    'touchmove',
+    (e) => {
+      if (!pullFrom) return;
+      const dx = e.touches[0].clientX - pullFrom.x;
+      const dy = e.touches[0].clientY - pullFrom.y;
+      if (dy <= 0 || Math.abs(dx) > dy) {
+        // Scrolling up or swiping sideways: not a pull.
+        if (Math.abs(dx) > 10 || dy < -10) pullFrom = null;
+        setPull(0);
+        return;
+      }
+      e.preventDefault();
+      setPull(Math.min(dy * 0.5, PULL_TRIGGER * 1.4));
+    },
+    { passive: false },
+  );
+  window.addEventListener('touchend', () => {
+    pull.classList.remove('is-dragging');
+    if (!pullFrom) return setPull(0);
+    pullFrom = null;
+    if (pullDist < PULL_TRIGGER) return setPull(0);
+    pull.classList.add('is-loading');
+    void refresh().finally(() => {
+      pull.classList.remove('is-loading');
+      setPull(0);
+      // Expired Access session: only a full page load can show its login.
+      if (state.error instanceof FeedError && state.error.kind === 'not-ics') location.reload();
+    });
+  });
+
   document.addEventListener('keydown', (e) => {
     if ((e.target as HTMLElement).closest('dialog, input, textarea')) return;
     if (e.key === 'ArrowLeft') step(-1);
