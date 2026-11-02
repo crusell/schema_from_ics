@@ -1,4 +1,5 @@
 import { IcsParseError, parseSchedule, type Lesson, type ParseWindow, type Schedule } from './lib/ics';
+import { parseRoute, routeHash, type View } from './lib/route';
 import { installMode, isIos, isStandalone, type BeforeInstallPromptEvent } from './lib/install';
 import { FeedError, fetchFeed, readCache, writeCache, type CachedFeed } from './lib/store';
 import {
@@ -17,7 +18,6 @@ import { renderDay } from './views/day';
 import { KIND_LABEL, durationMinutes, emptyGlyph, esc, hueStyle, timeRange } from './views/shared';
 import { renderWeek } from './views/week';
 
-type View = 'day' | 'week';
 type Theme = 'auto' | 'light' | 'dark';
 
 interface State {
@@ -115,7 +115,7 @@ export function createApp(root: HTMLElement) {
     state.day = day;
     state.selectedId = null;
     ensureWindow();
-    const hash = `#/${view === 'day' ? 'dag' : 'vecka'}/${day}`;
+    const hash = routeHash(view, day, state.today);
     if (push && location.hash !== hash) history.pushState(null, '', hash);
     render();
   }
@@ -128,9 +128,7 @@ export function createApp(root: HTMLElement) {
   }
 
   function readRoute(): { view: View; day: string } | null {
-    const m = location.hash.match(/^#\/(dag|vecka)\/(\d{4}-\d{2}-\d{2})$/);
-    if (!m) return null;
-    return { view: m[1] === 'dag' ? 'day' : 'week', day: m[2] };
+    return parseRoute(location.hash, state.today);
   }
 
   // ---------- theme ----------
@@ -578,9 +576,9 @@ export function createApp(root: HTMLElement) {
     state.view = route.view;
     state.day = route.day;
     ensureWindow();
-  } else {
-    history.replaceState(null, '', `#/dag/${state.day}`);
   }
+  // Normalise: an old dated link to today becomes #/dag, a missing hash too.
+  history.replaceState(null, '', routeHash(state.view, state.day, state.today));
   render();
   void refresh();
   setInterval(tick, 30_000);

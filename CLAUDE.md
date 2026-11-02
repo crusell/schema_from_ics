@@ -83,7 +83,9 @@ npm run deploy       # build + wrangler deploy (do not run without Zero Trust in
 
 ## Routes and state
 
-- Hash routes: `#/dag/YYYY-MM-DD`, `#/vecka/YYYY-MM-DD` (pushState; back
+- Hash routes (`src/lib/route.ts`): `#/dag/YYYY-MM-DD`, `#/vecka/YYYY-MM-DD`;
+  today / this week is written without date (`#/dag`, `#/vecka`) so a saved
+  address (iOS home-screen icon) always opens on today (pushState; back
   button works).
 - Theme: `localStorage['schema:theme']` = `light` | `dark`, absent = auto.
   Applied as `data-theme` on `<html>` before first paint (inline script in

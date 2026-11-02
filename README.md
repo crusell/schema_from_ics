@@ -140,7 +140,8 @@ Notes:
 ```
 index.html            app shell
 src/main.ts           bootstrap + service worker registration
-src/app.ts            state, routing (#/dag/YYYY-MM-DD, #/vecka/YYYY-MM-DD), rendering
+src/app.ts            state, events, rendering
+src/lib/route.ts      hash routes (#/dag[/YYYY-MM-DD], #/vecka[/YYYY-MM-DD])
 src/views/day.ts      day timeline
 src/views/week.ts     week grid
 src/views/shared.ts   escaping, lesson state helpers
