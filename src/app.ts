@@ -1,4 +1,5 @@
 import { IcsParseError, parseSchedule, type Lesson, type ParseWindow, type Schedule } from './lib/ics';
+import { installMode, isIos, isStandalone, type BeforeInstallPromptEvent } from './lib/install';
 import { FeedError, fetchFeed, readCache, writeCache, type CachedFeed } from './lib/store';
 import {
   addDays,
@@ -31,6 +32,8 @@ interface State {
   error: Error | null;
   online: boolean;
   selectedId: string | null;
+  /** The "how to install on iOS" sheet is open. */
+  installHelp: boolean;
   theme: Theme;
 }
 
@@ -54,8 +57,10 @@ export function createApp(root: HTMLElement) {
     error: null,
     online: navigator.onLine,
     selectedId: null,
+    installHelp: false,
     theme: readTheme(),
   };
+  let installPrompt: BeforeInstallPromptEvent | null = null;
 
   // ---------- data ----------
 
@@ -199,6 +204,7 @@ export function createApp(root: HTMLElement) {
       <div class="top__brand">
         <span class="brand">${esc(state.schedule?.calendarName || 'Martins schema')}</span>
         ${renderStatus()}
+        ${currentInstallMode() ? '<button class="installbtn" data-action="install" title="Installera appen på enheten">Installera</button>' : ''}
         <button class="iconbtn" data-action="theme" aria-label="${themeLabel}" title="${themeLabel}">${themeIcon}</button>
       </div>
       <div class="top__title">
@@ -289,7 +295,27 @@ export function createApp(root: HTMLElement) {
     return /BEGIN:VEVENT/i.test(state.feed?.ics ?? '');
   }
 
+  function currentInstallMode() {
+    return installMode({ standalone: isStandalone(window, navigator), ios: isIos(navigator), hasPrompt: installPrompt !== null });
+  }
+
+  function renderInstallSheet(): string {
+    const share = `<svg class="installhelp__share" viewBox="0 0 16 16" width="16" height="16" aria-label="dela-knappen"><path d="M8 10V2M5 5l3-3 3 3M4 7H3v7h10V7h-1" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+    return `<dialog class="sheet" id="sheet" aria-labelledby="sheet-title">
+      <div class="sheet__grab" aria-hidden="true"></div>
+      <h2 id="sheet-title" class="sheet__title">Installera Schema</h2>
+      <p class="sheet__when">Lägg appen på hemskärmen så öppnas schemat direkt, i helskärm.</p>
+      <ol class="installhelp">
+        <li>Tryck på ${share} dela-knappen (i Safari längst ner, i andra webbläsare i menyn).</li>
+        <li>Välj <strong>Lägg till på hemskärmen</strong>.</li>
+        <li>Tryck <strong>Lägg till</strong>.</li>
+      </ol>
+      <button class="btn btn--ghost" data-action="close">Stäng</button>
+    </dialog>`;
+  }
+
   function renderSheet(): string {
+    if (state.installHelp) return renderInstallSheet();
     const l = state.selectedId ? state.schedule?.lessons.find((x) => x.id === state.selectedId) : undefined;
     if (!l) return '<dialog class="sheet" id="sheet"></dialog>';
     const desc = l.description
@@ -328,7 +354,7 @@ export function createApp(root: HTMLElement) {
       ${renderSheet()}`;
     window.scrollTo(0, scrollY);
     const sheet = root.querySelector<HTMLDialogElement>('#sheet');
-    if (sheet && state.selectedId && !sheet.open) sheet.showModal();
+    if (sheet && (state.selectedId || state.installHelp) && !sheet.open) sheet.showModal();
     if (root.dataset.slide) {
       const stage = root.querySelector('#stage');
       stage?.classList.add(`slide-${root.dataset.slide}`);
@@ -375,6 +401,9 @@ export function createApp(root: HTMLElement) {
       case 'reload':
         location.reload();
         break;
+      case 'install':
+        void install();
+        break;
       case 'theme':
         state.theme = state.theme === 'auto' ? 'dark' : state.theme === 'dark' ? 'light' : 'auto';
         applyTheme();
@@ -383,15 +412,39 @@ export function createApp(root: HTMLElement) {
     }
   });
 
+  async function install(): Promise<void> {
+    if (!installPrompt) {
+      state.installHelp = true;
+      render();
+      return;
+    }
+    const prompt = installPrompt;
+    installPrompt = null; // a prompt can only be shown once
+    await prompt.prompt();
+    render();
+  }
+
+  window.addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault(); // show our own button instead of the browser's mini-infobar
+    installPrompt = e as BeforeInstallPromptEvent;
+    render();
+  });
+  window.addEventListener('appinstalled', () => {
+    installPrompt = null;
+    render();
+  });
+
   function closeSheet(): void {
     state.selectedId = null;
+    state.installHelp = false;
     root.querySelector<HTMLDialogElement>('#sheet')?.close();
     render();
   }
 
   root.addEventListener('close', (e) => {
-    if ((e.target as HTMLElement).id === 'sheet' && state.selectedId) {
+    if ((e.target as HTMLElement).id === 'sheet' && (state.selectedId || state.installHelp)) {
       state.selectedId = null;
+      state.installHelp = false;
       render();
     }
   });
@@ -431,7 +484,7 @@ export function createApp(root: HTMLElement) {
   window.addEventListener(
     'touchstart',
     (e) => {
-      const atTop = window.scrollY <= 0 && e.touches.length === 1 && !state.selectedId;
+      const atTop = window.scrollY <= 0 && e.touches.length === 1 && !state.selectedId && !state.installHelp;
       pullFrom = atTop && !state.loading ? { x: e.touches[0].clientX, y: e.touches[0].clientY } : null;
       pull.classList.add('is-dragging');
     },

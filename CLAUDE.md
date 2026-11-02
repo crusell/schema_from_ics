@@ -61,6 +61,9 @@ npm run deploy       # build + wrangler deploy (do not run without Zero Trust in
   can redirect to its login; only on network failure the last cached page or
   the precached `/index.html` is used. Never make navigations cache-first:
   that hid the Access login and froze phones on a stale app (2026-11).
+- **Install**: `src/lib/install.ts` decides when to show "Installera"
+  (not when standalone; `beforeinstallprompt` → browser dialog; iOS → help
+  sheet, `state.installHelp`).
 
 ## Patterns and rules
 

@@ -183,6 +183,26 @@ p {
   color: var(--accent);
   font-weight: 600;
 }
+.installbtn {
+  flex: none;
+  font-size: 12px;
+  font-weight: 700;
+  padding: 5px 12px;
+  border-radius: 999px;
+  background: var(--ink);
+  color: var(--bg);
+}
+.installhelp {
+  margin: 0 0 20px;
+  padding-left: 1.3em;
+  display: grid;
+  gap: 10px;
+  line-height: 1.45;
+}
+.installhelp__share {
+  vertical-align: -3px;
+  color: var(--accent);
+}
 .iconbtn {
   width: 32px;
   height: 32px;

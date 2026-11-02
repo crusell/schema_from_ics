@@ -46,6 +46,8 @@ Plugga feed, which now has events.
   SW update check were both redirected to the login and failed. Navigations
   are now network-first. A phone stuck on the old SW recovers by opening
   `/api/schedule.ics` (not handled by the old SW) to log in, then the app.
+- "Installera" header button (`src/lib/install.ts`): browser prompt on
+  Chromium, help sheet on iOS, hidden when installed. 65 tests.
 - Pull-to-refresh (touch events, indicator outside `#app`). Checked with
   synthetic touch events in desktop Chromium only.
 
