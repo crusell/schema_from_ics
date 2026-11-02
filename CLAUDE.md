@@ -24,7 +24,8 @@ npm run deploy       # build + wrangler deploy (do not run without Zero Trust in
   template strings. Event handling is delegated via `data-action` attributes.
   Views (`src/views/day.ts`, `week.ts`) are pure functions returning HTML.
 - **Data**: `src/lib/store.ts` fetches `/api/schedule.ics` (same origin),
-  validates that it starts with `BEGIN:VCALENDAR`, and caches the raw text +
+  validates that it starts with `BEGIN:VCALENDAR` (a redirect, 401 or 403 is
+  an expired Cloudflare Access session → `not-ics` / "logga in igen"), and caches the raw text +
   timestamp in `localStorage` (`schema:cache:v1`). On failure the cached copy
   is used and the header shows offline / error status. Refresh on load, when
   the tab becomes visible (if older than 5 min), every 30 min, and on `online`.

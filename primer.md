@@ -12,13 +12,12 @@ Stack: Vite 8, vanilla TypeScript, ical.js, zod (Worker env), vite-plugin-pwa,
 vitest, wrangler. See `CLAUDE.md` for architecture and `README.md` for
 setup/deploy. Repo: `github.com/crusell/schema_from_ics` (public).
 
-## Current state (2026-10-11)
+## Current state (2026-11-02)
 
 **Live** at `https://schema.martincrusell.com` behind Cloudflare Access
 (team `crusell`), Worker `schema`, deployed from `main`. `workers_dev` and
 preview URLs are off. `SCHEDULE_FEED_URL` secret is set to the production
-Plugga feed, which has **zero events** until the user adds data in production
-Plugga, so the live app shows "Schemat är tomt ännu". That is expected.
+Plugga feed, which now has events.
 
 - Day view: timeline, now-line, "Nu"/"Nästa" tags, "Pågår/Nästa" card,
   overlapping lessons side by side, details bottom sheet.
@@ -30,17 +29,17 @@ Plugga, so the live app shows "Schemat är tomt ännu". That is expected.
 - Offline cache in localStorage, PWA manifest + service worker, light/dark.
 - Tests: 57 passing (parser, layout, time, worker, views), typecheck clean.
 
-## What changed this session
+## What changed this session (2026-11-02)
 
-- Project created from an empty directory, pushed to GitHub, PR #1 merged.
-- Adjusted to the real feed shape using a local Plugga feed (`DEV_FEED_URL`
-  in gitignored `.env.local`): no teacher, UTC times, all-day hand-ins/tests
-  with `Kurs: …` in DESCRIPTION.
-- Fixed week grid misalignment and clipped 15-minute lessons.
-- /simplify and /code-review passes; Vite dev proxy reuses the Worker's
-  `handleSchedule` (http allowed for localhost only).
-- First deploy done; Access verified to redirect every path when anonymous.
-- Dev port is 4310 (strict).
+- Production feed now has events (122). Phone showed "Schemat är tomt ännu":
+  its refreshes failed, most likely an expired Access session, whose redirect
+  to the login page looked like a network error, so the app kept showing the
+  empty copy cached on 2026-10-11.
+- `fetchFeed` now uses `redirect: 'manual'` and reports redirects/401/403 as
+  a login problem ("Du behöver logga in igen" + "Ladda om").
+- An empty cached schedule plus a failing refresh now shows the error instead
+  of "Schemat är tomt ännu".
+- Added `test/store.test.ts` (61 tests total).
 
 ## Next steps
 

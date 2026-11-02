@@ -54,9 +54,16 @@ export async function fetchFeed(fetcher: typeof fetch = fetch): Promise<CachedFe
       cache: 'no-store',
       headers: { accept: 'text/calendar' },
       credentials: 'same-origin',
+      // An expired Cloudflare Access session answers with a redirect to the
+      // login page on another origin. Following it fails like a network
+      // error, so stop at the redirect and report it as a login problem.
+      redirect: 'manual',
     });
   } catch (err) {
     throw new FeedError('network', (err as Error).message || 'Nätverksfel');
+  }
+  if (res.type === 'opaqueredirect' || (res.status >= 300 && res.status < 400) || res.status === 401 || res.status === 403) {
+    throw new FeedError('not-ics', 'Inloggningen har gått ut');
   }
   const text = await res.text();
   if (!res.ok) {

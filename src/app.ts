@@ -246,19 +246,22 @@ export function createApp(root: HTMLElement) {
   }
 
   function renderBody(): string {
-    if (!state.schedule) {
+    // An empty cached schedule plus a failing refresh must show the failure,
+    // not "Schemat är tomt ännu": the feed may well have lessons by now.
+    const emptyCache = state.schedule?.lessons.length === 0 && !hasAnyLessonsInFeed();
+    if (!state.schedule || (emptyCache && state.error instanceof FeedError)) {
       if (state.loading) return `<div class="empty empty--loading"><div class="spinner" aria-hidden="true"></div><p>Hämtar schemat…</p></div>`;
       const err = state.error;
       if (err instanceof FeedError && err.kind === 'not-ics') {
         return `<div class="empty empty--error">${emptyGlyph('lock')}<h2>Du behöver logga in igen</h2><p>${esc(err.message)}.</p><button class="btn" data-action="reload">Ladda om</button></div>`;
       }
       if (err instanceof FeedError && (err.kind === 'offline' || err.kind === 'network')) {
-        return `<div class="empty empty--error">${emptyGlyph('offline')}<h2>Ingen anslutning</h2><p>Schemat har inte sparats på den här enheten ännu. Anslut till nätet och försök igen.</p><button class="btn" data-action="refresh">Försök igen</button></div>`;
+        return `<div class="empty empty--error">${emptyGlyph('offline')}<h2>Ingen anslutning</h2><p>Schemat kunde inte hämtas. Anslut till nätet och försök igen.</p><button class="btn" data-action="refresh">Försök igen</button></div>`;
       }
       return `<div class="empty empty--error">${emptyGlyph('warn')}<h2>Kunde inte hämta schemat</h2><p>${esc(err?.message ?? 'Okänt fel')}</p><button class="btn" data-action="refresh">Försök igen</button></div>`;
     }
 
-    if (state.schedule.lessons.length === 0 && !hasAnyLessonsInFeed()) {
+    if (emptyCache) {
       const name = state.schedule.calendarName;
       return `<div class="empty empty--calendar">
         ${emptyGlyph('calendar')}
